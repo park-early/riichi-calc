@@ -1,35 +1,94 @@
 console.log("TEST");
 
-type Tile = [number, string, boolean];
+// value, suit, open
+// 123456789, n, e, s, w, g, r, wh
+// man, pin, sou
+type Tile = [string, string, boolean];
 
-function calculatePoints(
-    hand: Tile[], 
+
+function calculate(
+    hand: Tile[][], 
     agari: Tile,
+    ron: boolean,
+    riichi: boolean,
+    ippatsu: boolean,
     houteiRaoyue: boolean,
     houteiRaoyui: boolean,
     rinshanKaihou: boolean,
     chankan: boolean,
     doubleRiichi: boolean,
-    dealer: boolean,
-    dora: number[],
-    riichiSticks: number,
-    honbaSticks: number
+    dora: number[]
+): number {
+    // possibleHands = formHands
+    // maxBasePoints = 0
+    // for each hand in possibleHands
+    //      maxBasePoints = max (maxBasePoints, calculateBasePoints)
+    //      if maxBasePoints >= 8000 break (yakuman achieved)
+    // 
+    // return calculateFinalPoints
+    return -1;
+};
+
+
+function formHands(
+    hand: Tile[][], 
+    agari: Tile,
+    openMelds: Tile[][]
+): Tile[][][] {
+    // possibleHands = empty
+    // remove openMelds from hand
+    // for each pair
+    //      remove pair from hand
+    //      possibleMelds = melds from openMelds
+    //      for each triplet
+    //          if triplet is valid
+    //              add triplet to possibleMelds
+    //
+    //      for each set of 4 melds in possibleMelds
+    //          if all 12 tiles are unique
+    //              add 4 melds and pair to possibleHands
+    return null;
+}
+
+function calculateBasePoints(
+    hand: Tile[][], 
+    agari: Tile,
+    ron: boolean,
+    riichi: boolean,
+    ippatsu: boolean,
+    houteiRaoyue: boolean,
+    houteiRaoyui: boolean,
+    rinshanKaihou: boolean,
+    chankan: boolean,
+    doubleRiichi: boolean,
+    dora: number[]
 ): number {
     let basePoints: number = 0;
-    // han = countHan
-    // if han < 5 then fu = countFu
-    // basePoints = calcBasePoints(han, fu)
-    // adjustForDealer(basePoints)
-    // basePoints += addRiichiStick(riichiSticks)
-    // basePoints += addHonbaStick(honbaSticks)
+    // han = checkYakuman
+    // if han = -1
+    //      han = countHan
+    //      if han < 5 then fu = countFu
+    //      basePoints = calcBasePoints(han, fu)
     return basePoints;
 };
 
+function calculateFinalPoints(
+    basePoints: number, 
+    dealer: boolean,
+    riichiSticks: number,
+    honbaSticks: number
+): number {
+    // if dealer multiply basePoints
+    // basePoints += addRiichiStick(riichiSticks)
+    // basePoints += addHonbaStick(honbaSticks)
+    return -1;
+}
+
 // return the number of han this hand is worth
 function countHan(): number {
-    // yakuman are 13 han
-    // checkYakuman
-    // checkYaku
+    // checkChitoitsu
+    // if han = -1 
+    //      han = checkYaku
     // countDora
     return -1;
 }
