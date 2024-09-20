@@ -1,0 +1,28 @@
+{
+  "name": "riichi-calc",
+  "version": "1.0.0",
+  "description": "Calculate maximum achievable points for a winning Riichi Mahjong hand.",
+  "main": "index.ts",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "start": "tsc && node dist/index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/park-early/riichi-calc.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/park-early/riichi-calc/issues"
+  },
+  "homepage": "https://github.com/park-early/riichi-calc#readme",
+  "devDependencies": {
+    "typescript": "^5.6.2"
+  },
+  "dependencies": {
+    "@types/node": "^22.5.5"
+  }
+}
