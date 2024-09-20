@@ -1,13 +1,17 @@
-console.log("TEST");
-
-// value, suit, open
+// value, suit
 // 123456789, n, e, s, w, g, r, wh
-// man, pin, sou
-type Tile = [string, string, boolean];
+// man, pin, sou, hon
+type Tile = [string, string];
 
+// tiles, open
+type Meld = [Tile[], boolean];
 
-function calculate(
-    hand: Tile[][], 
+// hand is a list of melds
+//      each open meld will be grouped as 1 meld
+//      all closed tiles will be grouped as 1 meld
+// agari is the winning tile
+export function calculate(
+    hand: Meld[], 
     agari: Tile,
     ron: boolean,
     riichi: boolean,
@@ -19,24 +23,57 @@ function calculate(
     doubleRiichi: boolean,
     dora: number[]
 ): number {
-    // possibleHands = formHands
-    // maxBasePoints = 0
-    // for each hand in possibleHands
-    //      maxBasePoints = max (maxBasePoints, calculateBasePoints)
-    //      if maxBasePoints >= 8000 break (yakuman achieved)
-    // 
-    // return calculateFinalPoints
-    return -1;
+    let possibleHands: Meld[][] = formHands(hand);
+    let maxBasePoints: number = 0;
+
+    for (let hand of possibleHands) {
+        maxBasePoints = Math.max(maxBasePoints, calculateBasePoints());
+        // already found the biggest hand
+        if (maxBasePoints >= 8000) break;
+    }
+
+    return calculateFinalPoints();
 };
 
-
 function formHands(
-    hand: Tile[][], 
-    agari: Tile,
-    openMelds: Tile[][]
-): Tile[][][] {
-    // possibleHands = empty
-    // remove openMelds from hand
+    hand: Meld[], 
+    // agari: Tile,
+    // openMelds: Tile[][]
+): Meld[][] {
+    let possibleHands: Meld[][] = []
+
+    // remove all open melds from the hand
+    // closedTiles is all the tiles that are not part of an open meld
+    let closedTiles: Tile[] = hand.filter((meld) => meld[1] == false)[0][0];
+    // order tiles by suit then value
+    closedTiles.sort((a, b) => {
+        if (a[1] < b[1]) return -1;
+        if (a[1] > b[1]) return 1;
+        if (a[0] < b[0]) return -1;
+        return 1;
+    });
+    console.log(closedTiles);
+
+    for (let i = 0; i < closedTiles.length - 1; i++) {
+        for (let j = i + 1; j < closedTiles.length; j++) {
+            if (
+                closedTiles[i][0] == closedTiles[j][0] &&
+                closedTiles[i][1] == closedTiles[j][1]
+            ) {
+                let count: number = 0;
+                let closedTilesWithoutPair: Tile[] = closedTiles.filter((tile) => {
+                    if (tile[0] == closedTiles[i][0] && tile[1] == closedTiles[i][1] && count < 2) {
+                        count++;
+                        return false;
+                    }
+                    return true;
+                });
+
+                console.log(closedTilesWithoutPair);
+            }
+        }
+    }
+
     // for each pair
     //      remove pair from hand
     //      possibleMelds = melds from openMelds
@@ -47,21 +84,23 @@ function formHands(
     //      for each set of 4 melds in possibleMelds
     //          if all 12 tiles are unique
     //              add 4 melds and pair to possibleHands
-    return null;
+    //
+    // return possibleHands
+    return [];
 }
 
 function calculateBasePoints(
-    hand: Tile[][], 
-    agari: Tile,
-    ron: boolean,
-    riichi: boolean,
-    ippatsu: boolean,
-    houteiRaoyue: boolean,
-    houteiRaoyui: boolean,
-    rinshanKaihou: boolean,
-    chankan: boolean,
-    doubleRiichi: boolean,
-    dora: number[]
+    // hand: Tile[][], 
+    // agari: Tile,
+    // ron: boolean,
+    // riichi: boolean,
+    // ippatsu: boolean,
+    // houteiRaoyue: boolean,
+    // houteiRaoyui: boolean,
+    // rinshanKaihou: boolean,
+    // chankan: boolean,
+    // doubleRiichi: boolean,
+    // dora: number[]
 ): number {
     let basePoints: number = 0;
     // han = checkYakuman
@@ -73,10 +112,10 @@ function calculateBasePoints(
 };
 
 function calculateFinalPoints(
-    basePoints: number, 
-    dealer: boolean,
-    riichiSticks: number,
-    honbaSticks: number
+    // basePoints: number, 
+    // dealer: boolean,
+    // riichiSticks: number,
+    // honbaSticks: number
 ): number {
     // if dealer multiply basePoints
     // basePoints += addRiichiStick(riichiSticks)
