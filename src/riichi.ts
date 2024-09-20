@@ -4,19 +4,48 @@ type Tile = [number, string, boolean];
 
 function calculatePoints(
     hand: Tile[], 
+    agari: Tile,
+    houteiRaoyue: boolean,
+    houteiRaoyui: boolean,
+    rinshanKaihou: boolean,
+    chankan: boolean,
+    doubleRiichi: boolean,
     dealer: boolean,
     dora: number[],
     riichiSticks: number,
     honbaSticks: number
 ): number {
-    let points: number = 0;
-    // countHan
-    // countFu
-    // adjustForDealer
-    // addRiichiStick
-    // addHonbaStick
-    return -1;
+    let basePoints: number = 0;
+    // han = countHan
+    // if han < 5 then fu = countFu
+    // basePoints = calcBasePoints(han, fu)
+    // adjustForDealer(basePoints)
+    // basePoints += addRiichiStick(riichiSticks)
+    // basePoints += addHonbaStick(honbaSticks)
+    return basePoints;
 };
+
+// return the number of han this hand is worth
+function countHan(): number {
+    // yakuman are 13 han
+    // checkYakuman
+    // checkYaku
+    // countDora
+    return -1;
+}
+
+// return the number of fu this hand is worth
+function countFu(): number {
+    let fu: number = 20;
+    // if tsumo, +10 (menzen-kafu)
+    // addMeldsFu
+    // addPairFu
+    // addWaitsFu
+    // addTsumoFu
+    // if chitoitsu, 25 fu awarded
+    // if ron but no additional fu, 30 fu awarded
+    return -1;
+}
 
 // checks for yakuman hand except kazoe yakuman (counted yakuman)
 function checkYakuman(hand: Tile[]): number {
