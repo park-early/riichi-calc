@@ -3,7 +3,7 @@ function main() {
     console.log("TEST");
     console.log(calculate([
         [
-            [["1", "pin"], ["2", "pin"], ["5", "man"], ["3", "man"], ["w", "hon"], ["7", "pin"], ["1", "pin"], ["4", "man"]],
+            [["1", "pin"], ["7", "sou"], ["5", "man"], ["3", "man"], ["8", "sou"], ["9", "sou"], ["1", "pin"], ["4", "man"]],
             false
         ],
         [

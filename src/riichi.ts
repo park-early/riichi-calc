@@ -21,7 +21,7 @@ export function calculate(
     rinshanKaihou: boolean,
     chankan: boolean,
     doubleRiichi: boolean,
-    dora: number[]
+    dora: Tile[]
 ): number {
     let possibleHands: Meld[][] = formHands(hand);
     let maxBasePoints: number = 0;
@@ -41,10 +41,9 @@ function formHands(
     // openMelds: Tile[][]
 ): Meld[][] {
     let possibleHands: Meld[][] = []
-
-    // remove all open melds from the hand
-    // closedTiles is all the tiles that are not part of an open meld
-    let closedTiles: Tile[] = hand.filter((meld) => meld[1] == false)[0][0];
+    // closedTiles is all the tiles that are not part of an open meld or closed kan
+    // arbitrarily decide that the first meld will contain all the ungrouped tiles
+    let closedTiles: Tile[] = hand[0][0];
     // order tiles by suit then value
     closedTiles.sort((a, b) => {
         if (a[1] < b[1]) return -1;
@@ -54,12 +53,15 @@ function formHands(
     });
     console.log(closedTiles);
 
+    // for each possible pair in hand
     for (let i = 0; i < closedTiles.length - 1; i++) {
         for (let j = i + 1; j < closedTiles.length; j++) {
             if (
                 closedTiles[i][0] == closedTiles[j][0] &&
                 closedTiles[i][1] == closedTiles[j][1]
             ) {
+                // filter the pair from the hand
+                let pairMeld: Meld = [[closedTiles[i], closedTiles[j]], false];
                 let count: number = 0;
                 let closedTilesWithoutPair: Tile[] = closedTiles.filter((tile) => {
                     if (tile[0] == closedTiles[i][0] && tile[1] == closedTiles[i][1] && count < 2) {
@@ -70,23 +72,127 @@ function formHands(
                 });
 
                 console.log(closedTilesWithoutPair);
+
+                let possibleMelds: Meld[] = [];
+                for (let k = 0; k < closedTilesWithoutPair.length - 2; k++) {
+                    for (let l = k + 1; l < closedTilesWithoutPair.length - 1; l++) {
+                        for (let m = l + 1; m < closedTilesWithoutPair.length; m++) {
+                            if (
+                                closedTilesWithoutPair[k][1] == closedTilesWithoutPair[l][1] &&
+                                closedTilesWithoutPair[k][1] == closedTilesWithoutPair[m][1]
+                            ) {
+                                if (
+                                    closedTilesWithoutPair[k][0] == closedTilesWithoutPair[l][0] &&
+                                    closedTilesWithoutPair[k][0] == closedTilesWithoutPair[m][0]
+                                ) {
+                                    console.log("set found");
+                                    possibleMelds.push([[closedTilesWithoutPair[k], closedTilesWithoutPair[l], closedTilesWithoutPair[m]], false]);
+                                } else if (
+                                    // compares NaN if passing in honor tiles, but this should behave ok still
+                                    parseInt(closedTilesWithoutPair[k][0]) + 1 == parseInt(closedTilesWithoutPair[l][0]) &&
+                                    parseInt(closedTilesWithoutPair[l][0]) + 1 == parseInt(closedTilesWithoutPair[m][0])
+                                ) {
+                                    console.log("sequence found");
+                                    possibleMelds.push([[closedTilesWithoutPair[k], closedTilesWithoutPair[l], closedTilesWithoutPair[m]], false]);
+                                }
+                            }
+                        }
+                    }
+                }
+
+                console.log(possibleMelds[0], possibleMelds[1]);
+
+                // check all combinations of melds to see if they cover closedTilesWithoutPair
+                // first we create buckets to track how many of each tile we had in our hand
+                for (let k = 1; k < hand.length; k++) {
+                    console.log(hand[k]);
+                    possibleMelds.push(hand[k]);
+                }
+                let buckets: Map<string, number> = new Map();
+                for (let meld of possibleMelds) {
+                    for (let tile of meld[0]) {
+                        let tileStr:string = tile[0] + tile[1];
+                        if (buckets.has(tileStr)) {
+                            const currentValue = buckets.get(tileStr);
+                            buckets.set(tileStr, currentValue + 1);
+                        } else {
+                            buckets.set(tileStr, 1);
+                        }
+                    }
+                }
+
+                console.log(buckets);
+                console.dir(possibleMelds, {depth: 3});
+
+                // next, check each combination of 4 melds
+                // each meld we remove a tile from the buckets
+                // as soon as we remove more tiles than we have, we throw away this possible combination
+                // otherwise, that means we have a valid combination of melds
+                for (let k = 0; k < possibleMelds.length - 3; k++) {
+                    let kBucket = new Map(buckets);
+                    for (let tile of possibleMelds[k][0]) {
+                        let tileStr:string = tile[0] + tile[1];
+                        if (kBucket.has(tileStr)) {
+                            const currentValue = kBucket.get(tileStr);
+                            if (currentValue == 0) continue;
+                            kBucket.set(tileStr, currentValue - 1);
+                        } else {
+                            continue;
+                        }
+                    }
+
+                    for (let l = k + 1; l < possibleMelds.length - 2; l++) {
+                        let lBucket = new Map(kBucket);
+                        for (let tile of possibleMelds[l][0]) {
+                            let tileStr:string = tile[0] + tile[1];
+                            if (lBucket.has(tileStr)) {
+                                const currentValue = lBucket.get(tileStr);
+                                if (currentValue == 0) continue;
+                                lBucket.set(tileStr, currentValue - 1);
+                            } else {
+                                continue;
+                            }
+                        }
+
+                        for (let m = l + 1; m < possibleMelds.length - 1; m++) {
+                            let mBucket = new Map(lBucket);
+                            for (let tile of possibleMelds[m][0]) {
+                                let tileStr:string = tile[0] + tile[1];
+                                if (mBucket.has(tileStr)) {
+                                    const currentValue = mBucket.get(tileStr);
+                                    if (currentValue == 0) continue;
+                                    mBucket.set(tileStr, currentValue - 1);
+                                } else {
+                                    continue;
+                                }
+                            }
+
+                            for (let n = m + 1; n < possibleMelds.length; n++) {
+                                let nBucket = new Map(mBucket);
+                                for (let tile of possibleMelds[m][0]) {
+                                    let tileStr:string = tile[0] + tile[1];
+                                    if (nBucket.has(tileStr)) {
+                                        const currentValue = nBucket.get(tileStr);
+                                        if (currentValue == 0) continue;
+                                        nBucket.set(tileStr, currentValue - 1);
+                                    } else {
+                                        continue;
+                                    }
+                                }
+
+                                console.log("deep loop");
+
+                                possibleHands.push([pairMeld, possibleMelds[k], possibleMelds[l], possibleMelds[m], possibleMelds[n]]);
+                            }
+                        }
+                    }
+                }
             }
         }
     }
 
-    // for each pair
-    //      remove pair from hand
-    //      possibleMelds = melds from openMelds
-    //      for each triplet
-    //          if triplet is valid
-    //              add triplet to possibleMelds
-    //
-    //      for each set of 4 melds in possibleMelds
-    //          if all 12 tiles are unique
-    //              add 4 melds and pair to possibleHands
-    //
-    // return possibleHands
-    return [];
+    console.dir(possibleHands, {depth: 4});
+    return possibleHands
 }
 
 function calculateBasePoints(
