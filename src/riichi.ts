@@ -16,23 +16,30 @@ export function calculate(
     dealer: boolean,
     ron: boolean,
     riichi: boolean,
+    doubleRiichi: boolean,
     ippatsu: boolean,
     houteiRaoyue: boolean,
     houteiRaoyui: boolean,
     rinshanKaihou: boolean,
     chankan: boolean,
-    doubleRiichi: boolean,
     dora: Tile[],
     riichiSticks: number,
     honbaSticks: number
 ): number {
-    let possibleHands: Meld[][] = formHands(hand);
     let maxBasePoints: number = 0;
 
-    for (let hand of possibleHands) {
-        maxBasePoints = Math.max(maxBasePoints, calculateBasePoints(hand));
-        // already found the biggest hand
-        if (maxBasePoints >= 8000) break;
+    // check if we have a non standard yaku. If so, then we can skip forming hands
+    maxBasePoints += checkKokushiMusou(hand, winningTile);
+    // checkChitoitsu will need to count hand and fu still
+    // maxBasePoints += checkChitoitsu
+
+    if (maxBasePoints == 0) {
+        let possibleHands: Meld[][] = formHands(hand);
+        for (let hand of possibleHands) {
+            maxBasePoints = Math.max(maxBasePoints, calculateBasePoints(hand));
+            // already found the biggest hand
+            if (maxBasePoints >= 8000) break;
+        }
     }
 
     return calculateFinalPoints(maxBasePoints, dealer, riichiSticks, honbaSticks);
@@ -208,11 +215,12 @@ function calculateBasePoints(
     // dora: Tile[]
 ): number {
     let basePoints: number = 0;
-    // han = checkYakuman
-    // if han = -1
+    // basePoints = checkYakuman
+    // no need to calculate if we have yakuman or higher
+    // if basePoints != 0
     //      han = countHan
     //      if han < 5 then fu = countFu
-    //      basePoints = calcBasePoints(han, fu)
+    //      basePoints = calculateFu(han, fu)
     return basePoints;
 };
 
@@ -254,9 +262,10 @@ function countFu(): number {
     return -1;
 }
 
-// checks for yakuman hand except kazoe yakuman (counted yakuman)
-function checkYakuman(hand: Tile[]): number {
-    checkKokushiMusou(hand);
+// checks for yakuman hand except kazoe yakuman (counted yakuman) and kokushi musou (13 orphans)
+function checkYakuman(hand: Meld[], winningTile: Tile): number {
+    let basePoints: number = 0;
+    // basePoints += checkKokushiMusou(hand, winningTile);
     // checkSuuankou
     // checkDaisangen
     // checkShousuushii
@@ -266,43 +275,57 @@ function checkYakuman(hand: Tile[]): number {
     // checkRyuuiisou
     // checkChuurenPoutou
     // checkSuukantsu
-    return -1;
+    return basePoints;
 }
 
 // checks for 13 orphans
 // one of each terminal and honor tile plus 1 extra terminal or honor
 // closed only
-function checkKokushiMusou(hand: Tile[]): number {
-    return -1;
+function checkKokushiMusou(hand: Meld[], winningTile: Tile): number {
+    // all closed tiles are in the first meld
+    let tiles: Tile[] = hand[0][0];
+    if (tiles.length == 14) {
+        // check if each tile is valid
+        // if we see the winning tile twice, then we know it is not a 13 tile wait -> not a double yakuman
+        let basePoints: number = 24000;
+        let valid: Set<string> = new Set(["1man", "9man", "1pin", "9pin", "1sou", "9sou", "ehon", "shon", "whon", "nhon", "ghon", "rhon", "whhon"]);
+        for (let tile of tiles) {
+            let str:string = tile[0] + tile[1];
+            if (!valid.has(str)) return 0;
+            if (winningTile[0] + winningTile[1] == str) basePoints -= 8000;
+        }
+        return basePoints;
+    }
+    return 0;
 }
 
 // checks for 4 concealed triplets
 // closed only
 // if shanpon, cannot win by ron
-function checkSuuankou(hand: Tile[]): number {
+function checkSuuankou(hand: Meld[]): number {
     return -1;
 }
 
 // checks for big 3 dragons
-function checkDaisangen(hand: Tile[]): number {
+function checkDaisangen(hand: Meld[]): number {
     return -1;
 }
 
 // checks for small winds
 // 3 groups of wind tiles plus a pair of the 4th
-function checkShousuushii(hand: Tile[]): number {
+function checkShousuushii(hand: Meld[]): number {
     return -1;
 }
 
 // checks for big winds
 // 4 groups of wind tiles
 // double yakuman
-function checkDaisuushii(hand: Tile[]): number {
+function checkDaisuushii(hand: Meld[]): number {
     return -1;
 }
 
 // checks for all honors
-function checkTsuuiisou(hand: Tile[]): number {
+function checkTsuuiisou(hand: Meld[]): number {
     return -1;
 }
 

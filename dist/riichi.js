@@ -2,16 +2,22 @@
 //      each open meld will be grouped as 1 meld
 //      all closed tiles will be grouped as 1 meld
 // agari is the winning tile
-export function calculate(hand, agari, ron, riichi, ippatsu, houteiRaoyue, houteiRaoyui, rinshanKaihou, chankan, doubleRiichi, dora) {
-    let possibleHands = formHands(hand);
+export function calculate(hand, winningTile, dealer, ron, riichi, doubleRiichi, ippatsu, houteiRaoyue, houteiRaoyui, rinshanKaihou, chankan, dora, riichiSticks, honbaSticks) {
     let maxBasePoints = 0;
-    for (let hand of possibleHands) {
-        maxBasePoints = Math.max(maxBasePoints, calculateBasePoints());
-        // already found the biggest hand
-        if (maxBasePoints >= 8000)
-            break;
+    // check if we have a non standard yaku. If so, then we can skip forming hands
+    maxBasePoints += checkKokushiMusou(hand, winningTile);
+    // checkChitoitsu will need to count hand and fu still
+    // maxBasePoints += checkChitoitsu
+    if (maxBasePoints == 0) {
+        let possibleHands = formHands(hand);
+        for (let hand of possibleHands) {
+            maxBasePoints = Math.max(maxBasePoints, calculateBasePoints(hand));
+            // already found the biggest hand
+            if (maxBasePoints >= 8000)
+                break;
+        }
     }
-    return calculateFinalPoints();
+    return calculateFinalPoints(maxBasePoints, dealer, riichiSticks, honbaSticks);
 }
 ;
 function formHands(hand) {
@@ -162,38 +168,27 @@ function formHands(hand) {
     console.dir(possibleHands, { depth: 4 });
     return possibleHands;
 }
-function calculateBasePoints(
-// hand: Tile[][], 
-// agari: Tile,
-// ron: boolean,
-// riichi: boolean,
-// ippatsu: boolean,
-// houteiRaoyue: boolean,
-// houteiRaoyui: boolean,
-// rinshanKaihou: boolean,
-// chankan: boolean,
-// doubleRiichi: boolean,
-// dora: number[]
-) {
+function calculateBasePoints(hand) {
     let basePoints = 0;
-    // han = checkYakuman
-    // if han = -1
+    // basePoints = checkYakuman
+    // no need to calculate if we have yakuman or higher
+    // if basePoints != 0
     //      han = countHan
     //      if han < 5 then fu = countFu
-    //      basePoints = calcBasePoints(han, fu)
+    //      basePoints = calculateFu(han, fu)
     return basePoints;
 }
 ;
-function calculateFinalPoints(
-// basePoints: number, 
-// dealer: boolean,
-// riichiSticks: number,
-// honbaSticks: number
-) {
-    // if dealer multiply basePoints
-    // basePoints += addRiichiStick(riichiSticks)
-    // basePoints += addHonbaStick(honbaSticks)
-    return -1;
+function calculateFinalPoints(basePoints, dealer, riichiSticks, honbaSticks) {
+    if (dealer) {
+        basePoints *= 6;
+    }
+    else {
+        basePoints *= 4;
+    }
+    basePoints += riichiSticks * 1000;
+    basePoints += honbaSticks * 300;
+    return basePoints;
 }
 // return the number of han this hand is worth
 function countHan() {
@@ -215,9 +210,10 @@ function countFu() {
     // if ron but no additional fu, 30 fu awarded
     return -1;
 }
-// checks for yakuman hand except kazoe yakuman (counted yakuman)
-function checkYakuman(hand) {
-    checkKokushiMusou(hand);
+// checks for yakuman hand except kazoe yakuman (counted yakuman) and kokushi musou (13 orphans)
+function checkYakuman(hand, winningTile) {
+    let basePoints = 0;
+    // basePoints += checkKokushiMusou(hand, winningTile);
     // checkSuuankou
     // checkDaisangen
     // checkShousuushii
@@ -227,13 +223,29 @@ function checkYakuman(hand) {
     // checkRyuuiisou
     // checkChuurenPoutou
     // checkSuukantsu
-    return -1;
+    return basePoints;
 }
 // checks for 13 orphans
 // one of each terminal and honor tile plus 1 extra terminal or honor
 // closed only
-function checkKokushiMusou(hand) {
-    return -1;
+function checkKokushiMusou(hand, winningTile) {
+    // all closed tiles are in the first meld
+    let tiles = hand[0][0];
+    if (tiles.length == 14) {
+        // check if each tile is valid
+        // if we see the winning tile twice, then we know it is not a 13 tile wait -> not a double yakuman
+        let basePoints = 24000;
+        let valid = new Set(["1man", "9man", "1pin", "9pin", "1sou", "9sou", "ehon", "shon", "whon", "nhon", "ghon", "rhon", "whhon"]);
+        for (let tile of tiles) {
+            let str = tile[0] + tile[1];
+            if (!valid.has(str))
+                return 0;
+            if (winningTile[0] + winningTile[1] == str)
+                basePoints -= 8000;
+        }
+        return basePoints;
+    }
+    return 0;
 }
 // checks for 4 concealed triplets
 // closed only

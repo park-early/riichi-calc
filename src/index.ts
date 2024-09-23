@@ -17,7 +17,42 @@ function main(): void {
                 true
             ],
         ], 
-        null, false, false, false, false, false, false, false, false, []))
+        null,   // winning tile
+        false,  // dealer
+        false,  // ron
+        false,  // riichi
+        false,  // double riichi
+        false,  // ippatsu
+        false,  // houtei raoyue
+        false,  // houtei rayui
+        false,  // rinshan kaihou
+        false,  // chankan
+        [],     // dora
+        0,      // riichi sticks
+        0       // honba sticks
+    ));
+
+    console.log(calculate(
+        [
+            [
+                [["1", "pin"], ["1", "pin"], ["9", "pin"], ["1", "man"], ["9", "man"], ["1", "sou"], ["9", "sou"], ["e", "hon"], ["s", "hon"], ["w", "hon"], ["n", "hon"], ["g", "hon"], ["r", "hon"], ["wh", "hon"]], 
+                false
+            ],
+        ], 
+        ["1", "pin"],   // winning tile
+        false,          // dealer
+        false,          // ron
+        false,          // riichi
+        false,          // double riichi
+        false,          // ippatsu
+        false,          // houtei raoyue
+        false,          // houtei rayui
+        false,          // rinshan kaihou
+        false,          // chankan
+        [],             // dora
+        1,              // riichi sticks
+        2               // honba sticks
+    ));
 }
 
 main();
