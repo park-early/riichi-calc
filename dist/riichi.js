@@ -2,7 +2,7 @@
 //      each open meld will be grouped as 1 meld
 //      all closed tiles will be grouped as 1 meld
 // agari is the winning tile
-export function calculate(hand, winningTile, dealer, ron, riichi, doubleRiichi, ippatsu, houteiRaoyue, houteiRaoyui, rinshanKaihou, chankan, dora, riichiSticks, honbaSticks) {
+export function calculate(hand, winningTile, dealer, ron, riichi, doubleRiichi, ippatsu, houteiRaoyue, houteiRaoyui, rinshanKaihou, chankan, tenhou, chiihou, dora, riichiSticks, honbaSticks) {
     let maxBasePoints = 0;
     // check if we have a non standard yaku. If so, then we can skip forming hands
     maxBasePoints += checkKokushiMusou(hand, winningTile);
@@ -11,12 +11,16 @@ export function calculate(hand, winningTile, dealer, ron, riichi, doubleRiichi, 
     if (maxBasePoints == 0) {
         let possibleHands = formHands(hand);
         for (let hand of possibleHands) {
-            maxBasePoints = Math.max(maxBasePoints, calculateBasePoints(hand));
+            maxBasePoints = Math.max(maxBasePoints, calculateBasePoints(hand, winningTile));
             // already found the biggest hand
             if (maxBasePoints >= 8000)
                 break;
         }
     }
+    // these yakuman are compatible with all hands so we check these after getting the base points of other yaku
+    // must be dealer for tenhou, must be non-dealer for chiihou
+    if (tenhou || chiihou)
+        maxBasePoints += 8000;
     return calculateFinalPoints(maxBasePoints, dealer, riichiSticks, honbaSticks);
 }
 ;
@@ -168,9 +172,9 @@ function formHands(hand) {
     console.dir(possibleHands, { depth: 4 });
     return possibleHands;
 }
-function calculateBasePoints(hand) {
+function calculateBasePoints(hand, winningTile) {
     let basePoints = 0;
-    // basePoints = checkYakuman
+    basePoints = checkYakuman(hand, winningTile);
     // no need to calculate if we have yakuman or higher
     // if basePoints != 0
     //      han = countHan
@@ -192,10 +196,8 @@ function calculateFinalPoints(basePoints, dealer, riichiSticks, honbaSticks) {
 }
 // return the number of han this hand is worth
 function countHan() {
-    // checkChitoitsu
-    // if han = -1 
-    //      han = checkYaku
-    // countDora
+    // han = checkYaku
+    // han += countDora
     return -1;
 }
 // return the number of fu this hand is worth
@@ -213,9 +215,8 @@ function countFu() {
 // checks for yakuman hand except kazoe yakuman (counted yakuman) and kokushi musou (13 orphans)
 function checkYakuman(hand, winningTile) {
     let basePoints = 0;
-    // basePoints += checkKokushiMusou(hand, winningTile);
     // checkSuuankou
-    // checkDaisangen
+    // basePoints += checkDaisangen(hand);
     // checkShousuushii
     // checkDaisuushii
     // checkTsuuiisou
@@ -243,7 +244,6 @@ function checkKokushiMusou(hand, winningTile) {
             if (winningTile[0] + winningTile[1] == str)
                 basePoints += 8000;
         }
-        return basePoints;
     }
     return basePoints;
 }

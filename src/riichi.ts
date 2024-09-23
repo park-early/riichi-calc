@@ -22,6 +22,8 @@ export function calculate(
     houteiRaoyui: boolean,
     rinshanKaihou: boolean,
     chankan: boolean,
+    tenhou: boolean,
+    chiihou: boolean,
     dora: Tile[],
     riichiSticks: number,
     honbaSticks: number
@@ -36,11 +38,15 @@ export function calculate(
     if (maxBasePoints == 0) {
         let possibleHands: Meld[][] = formHands(hand);
         for (let hand of possibleHands) {
-            maxBasePoints = Math.max(maxBasePoints, calculateBasePoints(hand));
+            maxBasePoints = Math.max(maxBasePoints, calculateBasePoints(hand, winningTile));
             // already found the biggest hand
             if (maxBasePoints >= 8000) break;
         }
     }
+
+    // these yakuman are compatible with all hands so we check these after getting the base points of other yaku
+    // must be dealer for tenhou, must be non-dealer for chiihou
+    if (tenhou || chiihou) maxBasePoints += 8000;
 
     return calculateFinalPoints(maxBasePoints, dealer, riichiSticks, honbaSticks);
 };
@@ -203,19 +209,19 @@ function formHands(hand: Meld[]): Meld[][] {
 
 function calculateBasePoints(
     hand: Meld[], 
-    // winningTile: Tile,
+    winningTile: Tile,
     // ron: boolean,
     // riichi: boolean,
+    // doubleRiichi: boolean,
     // ippatsu: boolean,
     // houteiRaoyue: boolean,
     // houteiRaoyui: boolean,
     // rinshanKaihou: boolean,
     // chankan: boolean,
-    // doubleRiichi: boolean,
     // dora: Tile[]
 ): number {
     let basePoints: number = 0;
-    // basePoints = checkYakuman
+    basePoints = checkYakuman(hand, winningTile);
     // no need to calculate if we have yakuman or higher
     // if basePoints != 0
     //      han = countHan
@@ -242,10 +248,8 @@ function calculateFinalPoints(
 
 // return the number of han this hand is worth
 function countHan(): number {
-    // checkChitoitsu
-    // if han = -1 
-    //      han = checkYaku
-    // countDora
+    // han = checkYaku
+    // han += countDora
     return -1;
 }
 
@@ -262,12 +266,15 @@ function countFu(): number {
     return -1;
 }
 
-// checks for yakuman hand except kazoe yakuman (counted yakuman) and kokushi musou (13 orphans)
+// checks for yakuman hand except the following:
+// kazoe yakuman (counted yakuman)
+// kokushi musou (13 orphans)
+// tenhou (blessing of heaven)
+// chiihou (blessing of earth)
 function checkYakuman(hand: Meld[], winningTile: Tile): number {
     let basePoints: number = 0;
-    // basePoints += checkKokushiMusou(hand, winningTile);
     // checkSuuankou
-    // checkDaisangen
+    // basePoints += checkDaisangen(hand);
     // checkShousuushii
     // checkDaisuushii
     // checkTsuuiisou
@@ -294,7 +301,6 @@ function checkKokushiMusou(hand: Meld[], winningTile: Tile): number {
             if (!valid.has(str)) return 0;
             if (winningTile[0] + winningTile[1] == str) basePoints += 8000;
         }
-        return basePoints;
     }
     return basePoints;
 }

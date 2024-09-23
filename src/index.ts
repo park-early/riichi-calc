@@ -27,6 +27,8 @@ function main(): void {
         false,  // houtei rayui
         false,  // rinshan kaihou
         false,  // chankan
+        false,  // tenhou
+        false,  // chiihou
         [],     // dora
         0,      // riichi sticks
         0       // honba sticks
@@ -50,6 +52,8 @@ function main(): void {
         false,          // houtei rayui
         false,          // rinshan kaihou
         false,          // chankan
+        false,          // tenhou
+        false,          // chiihou
         [],             // dora
         1,              // riichi sticks
         2               // honba sticks
