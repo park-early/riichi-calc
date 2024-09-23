@@ -231,21 +231,21 @@ function checkYakuman(hand, winningTile) {
 function checkKokushiMusou(hand, winningTile) {
     // all closed tiles are in the first meld
     let tiles = hand[0][0];
+    let basePoints = 0;
     if (tiles.length == 14) {
         // check if each tile is valid
         // if we see the winning tile twice, then we know it is not a 13 tile wait -> not a double yakuman
-        let basePoints = 24000;
         let valid = new Set(["1man", "9man", "1pin", "9pin", "1sou", "9sou", "ehon", "shon", "whon", "nhon", "ghon", "rhon", "whhon"]);
         for (let tile of tiles) {
             let str = tile[0] + tile[1];
             if (!valid.has(str))
                 return 0;
             if (winningTile[0] + winningTile[1] == str)
-                basePoints -= 8000;
+                basePoints += 8000;
         }
         return basePoints;
     }
-    return 0;
+    return basePoints;
 }
 // checks for 4 concealed triplets
 // closed only

@@ -1,7 +1,7 @@
 import { calculate } from "./riichi.js";
 
 function main(): void {
-    console.log("TEST");
+    console.log("GENERIC TEST");
     console.log(calculate(
         [
             [
@@ -32,6 +32,7 @@ function main(): void {
         0       // honba sticks
     ));
 
+    console.log("TEST 13 ORPHANS");
     console.log(calculate(
         [
             [
