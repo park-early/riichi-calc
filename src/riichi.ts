@@ -12,7 +12,8 @@ type Meld = [Tile[], boolean];
 // agari is the winning tile
 export function calculate(
     hand: Meld[], 
-    agari: Tile,
+    winningTile: Tile,
+    dealer: boolean,
     ron: boolean,
     riichi: boolean,
     ippatsu: boolean,
@@ -21,25 +22,23 @@ export function calculate(
     rinshanKaihou: boolean,
     chankan: boolean,
     doubleRiichi: boolean,
-    dora: Tile[]
+    dora: Tile[],
+    riichiSticks: number,
+    honbaSticks: number
 ): number {
     let possibleHands: Meld[][] = formHands(hand);
     let maxBasePoints: number = 0;
 
     for (let hand of possibleHands) {
-        maxBasePoints = Math.max(maxBasePoints, calculateBasePoints());
+        maxBasePoints = Math.max(maxBasePoints, calculateBasePoints(hand));
         // already found the biggest hand
         if (maxBasePoints >= 8000) break;
     }
 
-    return calculateFinalPoints();
+    return calculateFinalPoints(maxBasePoints, dealer, riichiSticks, honbaSticks);
 };
 
-function formHands(
-    hand: Meld[], 
-    // agari: Tile,
-    // openMelds: Tile[][]
-): Meld[][] {
+function formHands(hand: Meld[]): Meld[][] {
     let possibleHands: Meld[][] = []
     // closedTiles is all the tiles that are not part of an open meld or closed kan
     // arbitrarily decide that the first meld will contain all the ungrouped tiles
@@ -196,8 +195,8 @@ function formHands(
 }
 
 function calculateBasePoints(
-    // hand: Tile[][], 
-    // agari: Tile,
+    hand: Meld[], 
+    // winningTile: Tile,
     // ron: boolean,
     // riichi: boolean,
     // ippatsu: boolean,
@@ -206,7 +205,7 @@ function calculateBasePoints(
     // rinshanKaihou: boolean,
     // chankan: boolean,
     // doubleRiichi: boolean,
-    // dora: number[]
+    // dora: Tile[]
 ): number {
     let basePoints: number = 0;
     // han = checkYakuman
@@ -218,15 +217,19 @@ function calculateBasePoints(
 };
 
 function calculateFinalPoints(
-    // basePoints: number, 
-    // dealer: boolean,
-    // riichiSticks: number,
-    // honbaSticks: number
+    basePoints: number, 
+    dealer: boolean,
+    riichiSticks: number,
+    honbaSticks: number
 ): number {
-    // if dealer multiply basePoints
-    // basePoints += addRiichiStick(riichiSticks)
-    // basePoints += addHonbaStick(honbaSticks)
-    return -1;
+    if (dealer) {
+        basePoints *= 6;
+    } else {
+        basePoints *= 4;
+    }
+    basePoints += riichiSticks * 1000;
+    basePoints += honbaSticks * 300;
+    return basePoints;
 }
 
 // return the number of han this hand is worth
