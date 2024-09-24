@@ -3,8 +3,8 @@
 // man, pin, sou, hon
 type Tile = [string, string];
 
-// tiles, open
-type Meld = [Tile[], boolean];
+// tiles, open, kan
+type Meld = [Tile[], boolean, boolean];
 
 // hand is a list of melds
 //      each open meld will be grouped as 1 meld
@@ -38,7 +38,7 @@ export function calculate(
     if (maxBasePoints == 0) {
         let possibleHands: Meld[][] = formHands(hand);
         for (let hand of possibleHands) {
-            maxBasePoints = Math.max(maxBasePoints, calculateBasePoints(hand, winningTile));
+            maxBasePoints = Math.max(maxBasePoints, calculateBasePoints(hand, winningTile, ron));
             // already found the biggest hand
             if (maxBasePoints >= 8000) break;
         }
@@ -73,7 +73,7 @@ function formHands(hand: Meld[]): Meld[][] {
                 closedTiles[i][1] == closedTiles[j][1]
             ) {
                 // filter the pair from the hand
-                let pairMeld: Meld = [[closedTiles[i], closedTiles[j]], false];
+                let pairMeld: Meld = [[closedTiles[i], closedTiles[j]], false, false];
                 let count: number = 0;
                 let closedTilesWithoutPair: Tile[] = closedTiles.filter((tile) => {
                     if (tile[0] == closedTiles[i][0] && tile[1] == closedTiles[i][1] && count < 2) {
@@ -98,14 +98,14 @@ function formHands(hand: Meld[]): Meld[][] {
                                     closedTilesWithoutPair[k][0] == closedTilesWithoutPair[m][0]
                                 ) {
                                     console.log("set found");
-                                    possibleMelds.push([[closedTilesWithoutPair[k], closedTilesWithoutPair[l], closedTilesWithoutPair[m]], false]);
+                                    possibleMelds.push([[closedTilesWithoutPair[k], closedTilesWithoutPair[l], closedTilesWithoutPair[m]], false, false]);
                                 } else if (
                                     // compares NaN if passing in honor tiles, but this should behave ok still
                                     parseInt(closedTilesWithoutPair[k][0]) + 1 == parseInt(closedTilesWithoutPair[l][0]) &&
                                     parseInt(closedTilesWithoutPair[l][0]) + 1 == parseInt(closedTilesWithoutPair[m][0])
                                 ) {
                                     console.log("sequence found");
-                                    possibleMelds.push([[closedTilesWithoutPair[k], closedTilesWithoutPair[l], closedTilesWithoutPair[m]], false]);
+                                    possibleMelds.push([[closedTilesWithoutPair[k], closedTilesWithoutPair[l], closedTilesWithoutPair[m]], false, false]);
                                 }
                             }
                         }
@@ -115,11 +115,12 @@ function formHands(hand: Meld[]): Meld[][] {
                 console.log(possibleMelds[0], possibleMelds[1]);
 
                 // check all combinations of melds to see if they cover closedTilesWithoutPair
-                // first we create buckets to track how many of each tile we had in our hand
+                // add back all the exposed melds
                 for (let k = 1; k < hand.length; k++) {
                     console.log(hand[k]);
                     possibleMelds.push(hand[k]);
                 }
+                // we create buckets to track how many of each tile we had in our hand
                 let buckets: Map<string, number> = new Map();
                 for (let meld of possibleMelds) {
                     for (let tile of meld[0]) {
@@ -210,7 +211,7 @@ function formHands(hand: Meld[]): Meld[][] {
 function calculateBasePoints(
     hand: Meld[], 
     winningTile: Tile,
-    // ron: boolean,
+    ron: boolean,
     // riichi: boolean,
     // doubleRiichi: boolean,
     // ippatsu: boolean,
@@ -221,7 +222,7 @@ function calculateBasePoints(
     // dora: Tile[]
 ): number {
     let basePoints: number = 0;
-    basePoints = checkYakuman(hand, winningTile);
+    basePoints = checkYakuman(hand, winningTile, ron);
     // no need to calculate if we have yakuman or higher
     // if basePoints != 0
     //      han = countHan
@@ -271,12 +272,12 @@ function countFu(): number {
 // kokushi musou (13 orphans)
 // tenhou (blessing of heaven)
 // chiihou (blessing of earth)
-function checkYakuman(hand: Meld[], winningTile: Tile): number {
+function checkYakuman(hand: Meld[], winningTile: Tile, ron: boolean): number {
     let basePoints: number = 0;
-    // checkSuuankou
-    // basePoints += checkDaisangen(hand);
-    // checkShousuushii
-    // checkDaisuushii
+    basePoints += checkSuuankou(hand, winningTile, ron)
+    basePoints += checkDaisangen(hand);
+    basePoints += checkShousuushii(hand);
+    basePoints += checkDaisuushii(hand);
     // checkTsuuiisou
     // checkChinroutou
     // checkRyuuiisou
@@ -307,27 +308,65 @@ function checkKokushiMusou(hand: Meld[], winningTile: Tile): number {
 
 // checks for 4 concealed triplets
 // closed only
-// if shanpon, cannot win by ron
-function checkSuuankou(hand: Meld[]): number {
-    return -1;
+// if shanpon, cannot win by ron (ie. winning tile must be from the pair if won by ron)
+function checkSuuankou(hand: Meld[], winningTile: Tile, ron: boolean): number {
+    for (let meld of hand) {
+        if (!meld[1]) return 0;
+        if ((meld[0].length == 3) && (winningTile[0] + [1] == meld[0][0][0] + meld[0][0][1]) && ron) return 0;
+    }
+    return 8000;
 }
 
 // checks for big 3 dragons
 function checkDaisangen(hand: Meld[]): number {
-    return -1;
+    let ghon = false;
+    let rhon = false;
+    let whhon = false;
+    for (let meld of hand) {
+        if (meld[0].length == 3) {
+            ghon = ("ghon" == meld[0][0][0] + meld[0][0][1]) || ghon;
+            rhon = ("rhon" == meld[0][0][0] + meld[0][0][1]) || rhon;
+            whhon = ("whhon" == meld[0][0][0] + meld[0][0][1]) || whhon;
+        }
+    }
+    return (ghon && rhon && whhon) ? 8000 : 0;
 }
 
 // checks for small winds
 // 3 groups of wind tiles plus a pair of the 4th
+// this should be called before big winds
 function checkShousuushii(hand: Meld[]): number {
-    return -1;
+    let ehon = false;
+    let shon = false;
+    let nhon = false;
+    let whon = false;
+    for (let meld of hand) {
+        ehon = ("ehon" == meld[0][0][0] + meld[0][0][1]) || ehon;
+        shon = ("shon" == meld[0][0][0] + meld[0][0][1]) || shon;
+        whon = ("whon" == meld[0][0][0] + meld[0][0][1]) || whon;
+        nhon = ("nhon" == meld[0][0][0] + meld[0][0][1]) || nhon;
+    }
+    return (ehon && shon && whon && nhon) ? 8000 : 0;
 }
 
 // checks for big winds
 // 4 groups of wind tiles
 // double yakuman
+// this should only be called after checking small winds
 function checkDaisuushii(hand: Meld[]): number {
-    return -1;
+    let ehon = false;
+    let shon = false;
+    let nhon = false;
+    let whon = false;
+    for (let meld of hand) {
+        if (meld[0].length == 3) {
+            ehon = ("ehon" == meld[0][0][0] + meld[0][0][1]) || ehon;
+            shon = ("shon" == meld[0][0][0] + meld[0][0][1]) || shon;
+            whon = ("whon" == meld[0][0][0] + meld[0][0][1]) || whon;
+            nhon = ("nhon" == meld[0][0][0] + meld[0][0][1]) || nhon;
+        }   
+    }
+    return (ehon && shon && whon && nhon) ? 8000 : 0;
 }
 
 // checks for all honors
