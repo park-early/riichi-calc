@@ -63,7 +63,7 @@ function formHands(hand: Meld[]): Meld[][] {
         if (a[0] < b[0]) return -1;
         return 1;
     });
-    console.log(closedTiles);
+    // console.log(closedTiles);
 
     // for each possible pair in hand
     for (let i = 0; i < closedTiles.length - 1; i++) {
@@ -83,7 +83,7 @@ function formHands(hand: Meld[]): Meld[][] {
                     return true;
                 });
 
-                console.log(closedTilesWithoutPair);
+                // console.log(closedTilesWithoutPair);
 
                 let possibleMelds: Meld[] = [];
                 for (let k = 0; k < closedTilesWithoutPair.length - 2; k++) {
@@ -97,14 +97,14 @@ function formHands(hand: Meld[]): Meld[][] {
                                     closedTilesWithoutPair[k][0] == closedTilesWithoutPair[l][0] &&
                                     closedTilesWithoutPair[k][0] == closedTilesWithoutPair[m][0]
                                 ) {
-                                    console.log("set found");
+                                    // console.log("set found");
                                     possibleMelds.push([[closedTilesWithoutPair[k], closedTilesWithoutPair[l], closedTilesWithoutPair[m]], false, false]);
                                 } else if (
                                     // compares NaN if passing in honor tiles, but this should behave ok still
                                     parseInt(closedTilesWithoutPair[k][0]) + 1 == parseInt(closedTilesWithoutPair[l][0]) &&
                                     parseInt(closedTilesWithoutPair[l][0]) + 1 == parseInt(closedTilesWithoutPair[m][0])
                                 ) {
-                                    console.log("sequence found");
+                                    // console.log("sequence found");
                                     possibleMelds.push([[closedTilesWithoutPair[k], closedTilesWithoutPair[l], closedTilesWithoutPair[m]], false, false]);
                                 }
                             }
@@ -112,12 +112,12 @@ function formHands(hand: Meld[]): Meld[][] {
                     }
                 }
 
-                console.log(possibleMelds[0], possibleMelds[1]);
+                // console.log(possibleMelds[0], possibleMelds[1]);
 
                 // check all combinations of melds to see if they cover closedTilesWithoutPair
                 // add back all the exposed melds
                 for (let k = 1; k < hand.length; k++) {
-                    console.log(hand[k]);
+                    // console.log(hand[k]);
                     possibleMelds.push(hand[k]);
                 }
                 // we create buckets to track how many of each tile we had in our hand
@@ -134,8 +134,8 @@ function formHands(hand: Meld[]): Meld[][] {
                     }
                 }
 
-                console.log(buckets);
-                console.dir(possibleMelds, {depth: 3});
+                // console.log(buckets);
+                // console.dir(possibleMelds, {depth: 3});
 
                 // next, check each combination of 4 melds
                 // each meld we remove a tile from the buckets
@@ -193,7 +193,7 @@ function formHands(hand: Meld[]): Meld[][] {
                                     }
                                 }
 
-                                console.log("deep loop");
+                                // console.log("deep loop");
 
                                 possibleHands.push([pairMeld, possibleMelds[k], possibleMelds[l], possibleMelds[m], possibleMelds[n]]);
                             }
@@ -278,11 +278,11 @@ function checkYakuman(hand: Meld[], winningTile: Tile, ron: boolean): number {
     basePoints += checkDaisangen(hand);
     basePoints += checkShousuushii(hand);
     basePoints += checkDaisuushii(hand);
-    // checkTsuuiisou
-    // checkChinroutou
-    // checkRyuuiisou
+    basePoints += checkTsuuiisou(hand);
+    basePoints += checkChinroutou(hand);
+    basePoints += checkRyuuiisou(hand);
     // checkChuurenPoutou
-    // checkSuukantsu
+    basePoints += checkSuukantsu(hand);
     return basePoints;
 }
 
@@ -313,6 +313,7 @@ function checkSuuankou(hand: Meld[], winningTile: Tile, ron: boolean): number {
     for (let meld of hand) {
         if (!meld[1]) return 0;
         if ((meld[0].length == 3) && (winningTile[0] + [1] == meld[0][0][0] + meld[0][0][1]) && ron) return 0;
+        if (meld[0][0][0] != meld[0][1][0]) return 0;
     }
     return 8000;
 }
@@ -371,28 +372,63 @@ function checkDaisuushii(hand: Meld[]): number {
 
 // checks for all honors
 function checkTsuuiisou(hand: Meld[]): number {
-    return -1;
+    let honors: Set<string> = new Set(["ghon", "whhon", "rhon", "ehon", "shon", "nhon", "whon"]);
+    for (let meld of hand) {
+        let str = meld[0][0][0] + meld[0][0][1];
+        if (!honors.has(str)) return 0;
+    }
+    return 8000;
 }
 
 // checks for all terminals
-function checkChinroutou(hand: Tile[]): number {
-    return -1;
+function checkChinroutou(hand: Meld[]): number {
+    let terminals: Set<string> = new Set(["1man", "9man", "1pin", "9pin", "1sou", "9sou"]);
+    for (let meld of hand) {
+        let str = meld[0][0][0] + meld[0][0][1];
+        if (!terminals.has(str)) return 0;
+        if (meld[0][0][0] != meld[0][1][0]) return 0;
+    }
+    return 8000;
 }
 
 // checks for all green
-// winning hand cannot contain 2, 3, 4, 6, and 8 sou and/or green dragon
-function checkRyuuiisou(hand: Tile[]): number {
-    return -1;
+// winning hand can only contain 2, 3, 4, 6, and 8 sou and/or green dragon
+function checkRyuuiisou(hand: Meld[]): number {
+    let greens: Set<string> = new Set(["2sou", "3sou", "4sou", "6sou", "8sou", "ghon"]);
+    for (let meld of hand) {
+        for (let tile of meld[0]) {
+            let str = tile[0] + tile[1];
+            if (!greens.has(str)) return 0;
+        }
+    }
+    return 8000;
 }
 
 // checks for nine gates
 // 1112345678999 in the same suit plus any 1 extra tile of the same suit
+// cannot call kan on 1s or 9s
 // closed only
-function checkChuurenPoutou(hand: Tile[]): number {
-    return -1;
+function checkChuurenPoutou(hand: Meld[]): number {
+    // let honors: Set<string> = new Set(["ghon", "whhon", "rhon", "ehon", "shon", "nhon", "whon"]);
+    // let suit: string = hand[0][0][0][1];
+    // for (let meld of hand) {
+    //     if (meld[0].length == 2) {
+    //         if (meld[0][0][0] == "1" || meld[0][0][0] == "9") return 
+    //     }
+    //     if (meld[0][0][0] == "1" && meld[0][0])
+    //     for (let tile of meld[0]) {
+    //         let str = tile[0] + tile[1];
+    //         if (honors.has(str)) return 0;
+    //         if (suit != tile[1]) return 0;
+    //     }
+    // }
+    return 8000;
 }
 
 // checks for 4 kans
-function checkSuukantsu(hand: Tile[]): number {
-    return -1;
+function checkSuukantsu(hand: Meld[]): number {
+    for (let meld of hand) {
+        if (meld[0].length == 3 && !meld[2]) return 0;
+    }
+    return 8000;
 }

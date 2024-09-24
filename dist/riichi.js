@@ -11,7 +11,7 @@ export function calculate(hand, winningTile, dealer, ron, riichi, doubleRiichi, 
     if (maxBasePoints == 0) {
         let possibleHands = formHands(hand);
         for (let hand of possibleHands) {
-            maxBasePoints = Math.max(maxBasePoints, calculateBasePoints(hand, winningTile));
+            maxBasePoints = Math.max(maxBasePoints, calculateBasePoints(hand, winningTile, ron));
             // already found the biggest hand
             if (maxBasePoints >= 8000)
                 break;
@@ -39,14 +39,14 @@ function formHands(hand) {
             return -1;
         return 1;
     });
-    console.log(closedTiles);
+    // console.log(closedTiles);
     // for each possible pair in hand
     for (let i = 0; i < closedTiles.length - 1; i++) {
         for (let j = i + 1; j < closedTiles.length; j++) {
             if (closedTiles[i][0] == closedTiles[j][0] &&
                 closedTiles[i][1] == closedTiles[j][1]) {
                 // filter the pair from the hand
-                let pairMeld = [[closedTiles[i], closedTiles[j]], false];
+                let pairMeld = [[closedTiles[i], closedTiles[j]], false, false];
                 let count = 0;
                 let closedTilesWithoutPair = closedTiles.filter((tile) => {
                     if (tile[0] == closedTiles[i][0] && tile[1] == closedTiles[i][1] && count < 2) {
@@ -55,7 +55,7 @@ function formHands(hand) {
                     }
                     return true;
                 });
-                console.log(closedTilesWithoutPair);
+                // console.log(closedTilesWithoutPair);
                 let possibleMelds = [];
                 for (let k = 0; k < closedTilesWithoutPair.length - 2; k++) {
                     for (let l = k + 1; l < closedTilesWithoutPair.length - 1; l++) {
@@ -64,27 +64,28 @@ function formHands(hand) {
                                 closedTilesWithoutPair[k][1] == closedTilesWithoutPair[m][1]) {
                                 if (closedTilesWithoutPair[k][0] == closedTilesWithoutPair[l][0] &&
                                     closedTilesWithoutPair[k][0] == closedTilesWithoutPair[m][0]) {
-                                    console.log("set found");
-                                    possibleMelds.push([[closedTilesWithoutPair[k], closedTilesWithoutPair[l], closedTilesWithoutPair[m]], false]);
+                                    // console.log("set found");
+                                    possibleMelds.push([[closedTilesWithoutPair[k], closedTilesWithoutPair[l], closedTilesWithoutPair[m]], false, false]);
                                 }
                                 else if (
                                 // compares NaN if passing in honor tiles, but this should behave ok still
                                 parseInt(closedTilesWithoutPair[k][0]) + 1 == parseInt(closedTilesWithoutPair[l][0]) &&
                                     parseInt(closedTilesWithoutPair[l][0]) + 1 == parseInt(closedTilesWithoutPair[m][0])) {
-                                    console.log("sequence found");
-                                    possibleMelds.push([[closedTilesWithoutPair[k], closedTilesWithoutPair[l], closedTilesWithoutPair[m]], false]);
+                                    // console.log("sequence found");
+                                    possibleMelds.push([[closedTilesWithoutPair[k], closedTilesWithoutPair[l], closedTilesWithoutPair[m]], false, false]);
                                 }
                             }
                         }
                     }
                 }
-                console.log(possibleMelds[0], possibleMelds[1]);
+                // console.log(possibleMelds[0], possibleMelds[1]);
                 // check all combinations of melds to see if they cover closedTilesWithoutPair
-                // first we create buckets to track how many of each tile we had in our hand
+                // add back all the exposed melds
                 for (let k = 1; k < hand.length; k++) {
-                    console.log(hand[k]);
+                    // console.log(hand[k]);
                     possibleMelds.push(hand[k]);
                 }
+                // we create buckets to track how many of each tile we had in our hand
                 let buckets = new Map();
                 for (let meld of possibleMelds) {
                     for (let tile of meld[0]) {
@@ -98,8 +99,8 @@ function formHands(hand) {
                         }
                     }
                 }
-                console.log(buckets);
-                console.dir(possibleMelds, { depth: 3 });
+                // console.log(buckets);
+                // console.dir(possibleMelds, {depth: 3});
                 // next, check each combination of 4 melds
                 // each meld we remove a tile from the buckets
                 // as soon as we remove more tiles than we have, we throw away this possible combination
@@ -160,7 +161,7 @@ function formHands(hand) {
                                         continue;
                                     }
                                 }
-                                console.log("deep loop");
+                                // console.log("deep loop");
                                 possibleHands.push([pairMeld, possibleMelds[k], possibleMelds[l], possibleMelds[m], possibleMelds[n]]);
                             }
                         }
@@ -172,9 +173,9 @@ function formHands(hand) {
     console.dir(possibleHands, { depth: 4 });
     return possibleHands;
 }
-function calculateBasePoints(hand, winningTile) {
+function calculateBasePoints(hand, winningTile, ron) {
     let basePoints = 0;
-    basePoints = checkYakuman(hand, winningTile);
+    basePoints = checkYakuman(hand, winningTile, ron);
     // no need to calculate if we have yakuman or higher
     // if basePoints != 0
     //      han = countHan
@@ -212,18 +213,22 @@ function countFu() {
     // if ron but no additional fu, 30 fu awarded
     return -1;
 }
-// checks for yakuman hand except kazoe yakuman (counted yakuman) and kokushi musou (13 orphans)
-function checkYakuman(hand, winningTile) {
+// checks for yakuman hand except the following:
+// kazoe yakuman (counted yakuman)
+// kokushi musou (13 orphans)
+// tenhou (blessing of heaven)
+// chiihou (blessing of earth)
+function checkYakuman(hand, winningTile, ron) {
     let basePoints = 0;
-    // checkSuuankou
-    // basePoints += checkDaisangen(hand);
-    // checkShousuushii
-    // checkDaisuushii
-    // checkTsuuiisou
-    // checkChinroutou
-    // checkRyuuiisou
+    basePoints += checkSuuankou(hand, winningTile, ron);
+    basePoints += checkDaisangen(hand);
+    basePoints += checkShousuushii(hand);
+    basePoints += checkDaisuushii(hand);
+    basePoints += checkTsuuiisou(hand);
+    basePoints += checkChinroutou(hand);
+    basePoints += checkRyuuiisou(hand);
     // checkChuurenPoutou
-    // checkSuukantsu
+    basePoints += checkSuukantsu(hand);
     return basePoints;
 }
 // checks for 13 orphans
@@ -249,46 +254,128 @@ function checkKokushiMusou(hand, winningTile) {
 }
 // checks for 4 concealed triplets
 // closed only
-// if shanpon, cannot win by ron
-function checkSuuankou(hand) {
-    return -1;
+// if shanpon, cannot win by ron (ie. winning tile must be from the pair if won by ron)
+function checkSuuankou(hand, winningTile, ron) {
+    for (let meld of hand) {
+        if (!meld[1])
+            return 0;
+        if ((meld[0].length == 3) && (winningTile[0] + [1] == meld[0][0][0] + meld[0][0][1]) && ron)
+            return 0;
+        if (meld[0][0][0] != meld[0][1][0])
+            return 0;
+    }
+    return 8000;
 }
 // checks for big 3 dragons
 function checkDaisangen(hand) {
-    return -1;
+    let ghon = false;
+    let rhon = false;
+    let whhon = false;
+    for (let meld of hand) {
+        if (meld[0].length == 3) {
+            ghon = ("ghon" == meld[0][0][0] + meld[0][0][1]) || ghon;
+            rhon = ("rhon" == meld[0][0][0] + meld[0][0][1]) || rhon;
+            whhon = ("whhon" == meld[0][0][0] + meld[0][0][1]) || whhon;
+        }
+    }
+    return (ghon && rhon && whhon) ? 8000 : 0;
 }
 // checks for small winds
 // 3 groups of wind tiles plus a pair of the 4th
+// this should be called before big winds
 function checkShousuushii(hand) {
-    return -1;
+    let ehon = false;
+    let shon = false;
+    let nhon = false;
+    let whon = false;
+    for (let meld of hand) {
+        ehon = ("ehon" == meld[0][0][0] + meld[0][0][1]) || ehon;
+        shon = ("shon" == meld[0][0][0] + meld[0][0][1]) || shon;
+        whon = ("whon" == meld[0][0][0] + meld[0][0][1]) || whon;
+        nhon = ("nhon" == meld[0][0][0] + meld[0][0][1]) || nhon;
+    }
+    return (ehon && shon && whon && nhon) ? 8000 : 0;
 }
 // checks for big winds
 // 4 groups of wind tiles
 // double yakuman
+// this should only be called after checking small winds
 function checkDaisuushii(hand) {
-    return -1;
+    let ehon = false;
+    let shon = false;
+    let nhon = false;
+    let whon = false;
+    for (let meld of hand) {
+        if (meld[0].length == 3) {
+            ehon = ("ehon" == meld[0][0][0] + meld[0][0][1]) || ehon;
+            shon = ("shon" == meld[0][0][0] + meld[0][0][1]) || shon;
+            whon = ("whon" == meld[0][0][0] + meld[0][0][1]) || whon;
+            nhon = ("nhon" == meld[0][0][0] + meld[0][0][1]) || nhon;
+        }
+    }
+    return (ehon && shon && whon && nhon) ? 8000 : 0;
 }
 // checks for all honors
 function checkTsuuiisou(hand) {
-    return -1;
+    let honors = new Set(["ghon", "whhon", "rhon", "ehon", "shon", "nhon", "whon"]);
+    for (let meld of hand) {
+        let str = meld[0][0][0] + meld[0][0][1];
+        if (!honors.has(str))
+            return 0;
+    }
+    return 8000;
 }
 // checks for all terminals
 function checkChinroutou(hand) {
-    return -1;
+    let terminals = new Set(["1man", "9man", "1pin", "9pin", "1sou", "9sou"]);
+    for (let meld of hand) {
+        let str = meld[0][0][0] + meld[0][0][1];
+        if (!terminals.has(str))
+            return 0;
+        if (meld[0][0][0] != meld[0][1][0])
+            return 0;
+    }
+    return 8000;
 }
 // checks for all green
-// winning hand cannot contain 2, 3, 4, 6, and 8 sou and/or green dragon
+// winning hand can only contain 2, 3, 4, 6, and 8 sou and/or green dragon
 function checkRyuuiisou(hand) {
-    return -1;
+    let greens = new Set(["2sou", "3sou", "4sou", "6sou", "8sou", "ghon"]);
+    for (let meld of hand) {
+        for (let tile of meld[0]) {
+            let str = tile[0] + tile[1];
+            if (!greens.has(str))
+                return 0;
+        }
+    }
+    return 8000;
 }
 // checks for nine gates
 // 1112345678999 in the same suit plus any 1 extra tile of the same suit
+// cannot call kan on 1s or 9s
 // closed only
 function checkChuurenPoutou(hand) {
-    return -1;
+    // let honors: Set<string> = new Set(["ghon", "whhon", "rhon", "ehon", "shon", "nhon", "whon"]);
+    // let suit: string = hand[0][0][0][1];
+    // for (let meld of hand) {
+    //     if (meld[0].length == 2) {
+    //         if (meld[0][0][0] == "1" || meld[0][0][0] == "9") return 
+    //     }
+    //     if (meld[0][0][0] == "1" && meld[0][0])
+    //     for (let tile of meld[0]) {
+    //         let str = tile[0] + tile[1];
+    //         if (honors.has(str)) return 0;
+    //         if (suit != tile[1]) return 0;
+    //     }
+    // }
+    return 8000;
 }
 // checks for 4 kans
 function checkSuukantsu(hand) {
-    return -1;
+    for (let meld of hand) {
+        if (meld[0].length == 3 && !meld[2])
+            return 0;
+    }
+    return 8000;
 }
 //# sourceMappingURL=riichi.js.map

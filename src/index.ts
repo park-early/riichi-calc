@@ -66,13 +66,28 @@ function main(): void {
     console.log("TEST BIG 3 DRAGONS");
     console.log(calculate(
         [
-            // [
-            //     [["1", "pin"], ["1", "pin"], ["9", "pin"], ["1", "man"], ["9", "man"], ["1", "sou"], ["9", "sou"], ["e", "hon"], ["s", "hon"], ["w", "hon"], ["n", "hon"], ["g", "hon"], ["r", "hon"], ["wh", "hon"]], 
-            //     false,
-            //     false
-            // ],
+            [
+                [["1", "pin"], ["5", "man"], ["3", "man"], ["1", "pin"], ["4", "man"]], 
+                false,
+                false
+            ],
+            [
+                [["g", "hon"], ["g", "hon"], ["g", "hon"]], 
+                true,
+                false
+            ],
+            [
+                [["r", "hon"], ["r", "hon"], ["r", "hon"]], 
+                true,
+                false
+            ],
+            [
+                [["wh", "hon"], ["wh", "hon"], ["wh", "hon"]], 
+                false,
+                true
+            ],
         ], 
-        ["1", "pin"],   // winning tile
+        ["g", "hon"],   // winning tile
         false,          // dealer
         false,          // ron
         false,          // riichi
